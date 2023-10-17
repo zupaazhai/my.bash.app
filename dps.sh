@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#=================================
+# Docker PS Viewer and accesst to container
+#
+# Author: Supachai Wongmoon
+#=================================
+
 # Create arrays to store container names and IDs
 container_names=()
 container_ids=()
