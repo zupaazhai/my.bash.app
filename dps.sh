@@ -9,16 +9,18 @@
 # Create arrays to store container names and IDs
 container_names=()
 container_ids=()
+container_ports=()
 
 while IFS= read -r line; do
   container_names+=("$(echo "$line" | awk '{print $1}')")
   container_ids+=("$(echo "$line" | awk '{print $2}')")
-done < <(docker ps --format "{{.Names}} {{.ID}}" --no-trunc)
+  container_ports+=("$(echo "$line" | awk '{print $3}' | cut -d':' -f2 | cut -d'-' -f1 )")
+done < <(docker ps --format "{{.Names}} {{.ID}} {{.Ports}}" --no-trunc)
 
 # Display a numbered list of containers
 echo "Select a container to access:"
 for i in "${!container_names[@]}"; do
-  echo "[$((i+1))] ${container_names[i]}"
+  echo "[$((i+1))] ${container_names[i]} : ${container_ports[i]}"
 done
 
 # Read the user's choice
@@ -28,12 +30,14 @@ read -p "Enter the number of the container you want to access: " choice
 if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#container_names[@]} ]]; then
   selected_container="${container_names[choice-1]}"
   selected_container_id="${container_ids[choice-1]}"
+  selected_container_port="${container_ports[choice-1]}"
 
   # if selected container contains with mysql or db
   if [[ $selected_container =~ .*mysql.* ]] || [[ $selected_container =~ .*db.* ]]; then
     echo ""
     echo "======================================"
     echo "Accessing container: $selected_container with MySQL shell"
+    echo "Running on Port : $selected_container_port"
     echo "======================================"
     echo ""
     # Run the shell inside the selected container
@@ -44,6 +48,7 @@ if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#container_names[@]}
   echo ""
   echo "======================================"
   echo "Accessing container: $selected_container with Bash shell"
+  echo "Running on Port : $selected_container_port"
   echo "======================================"
   echo ""
   # Run the shell inside the selected container
