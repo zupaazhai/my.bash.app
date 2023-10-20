@@ -11,10 +11,25 @@ container_names=()
 container_ids=()
 container_ports=()
 
+extract_port() {
+  local input="$1"
+  str_ports=""
+  IFS=',' read -ra chunks <<< "$input"
+  for chunk in "${chunks[@]}"; do
+    chunk=$(echo "$chunk" | tr '-' '\n' | head -n 1)
+    IFS=':' read -ra uri <<< "$chunk"
+    str_ports="$str_ports${uri[1]},"
+  done
+
+  str_ports="${str_ports%?}"
+  echo $str_ports
+}
+
 while IFS= read -r line; do
   container_names+=("$(echo "$line" | awk '{print $1}')")
   container_ids+=("$(echo "$line" | awk '{print $2}')")
-  container_ports+=("$(echo "$line" | awk '{print $3}' | cut -d':' -f2 | cut -d'-' -f1 )")
+  ports=$(extract_port "$(echo "$line" | awk '{print $3 $4}')" )
+  container_ports+=($ports)
 done < <(docker ps --format "{{.Names}} {{.ID}} {{.Ports}}" --no-trunc)
 
 # Display a numbered list of containers
