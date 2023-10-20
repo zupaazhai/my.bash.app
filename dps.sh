@@ -41,24 +41,30 @@ done
 # Read the user's choice
 read -p "Enter the number of the container you want to access: " choice
 
+# if choice is start with ! and number open the container with bash
+if [[ $choice =~ ^#[0-9]+$ ]]; then
+
+  # remove ! from choice
+  choice="${choice:1}"
+  selected_container_port="${container_ports[choice-1]}"
+
+  if [[ $selected_container_port == *","* ]]; then
+    IFS=',' read -ra ports <<< "$selected_container_port"
+    selected_container_port="${ports[1]}"
+  fi
+
+  # open Firefox in Mac with url localhost:port
+  open -a Firefox "http://localhost:$selected_container_port"
+
+  exit 0
+fi
+
+
 # Validate the choice
 if [[ $choice =~ ^[0-9]+$ && $choice -ge 1 && $choice -le ${#container_names[@]} ]]; then
   selected_container="${container_names[choice-1]}"
   selected_container_id="${container_ids[choice-1]}"
   selected_container_port="${container_ports[choice-1]}"
-
-  # if selected container contains with mysql or db
-  if [[ $selected_container =~ .*mysql.* ]] || [[ $selected_container =~ .*db.* ]]; then
-    echo ""
-    echo "======================================"
-    echo "Accessing container: $selected_container with MySQL shell"
-    echo "Running on Port : $selected_container_port"
-    echo "======================================"
-    echo ""
-    # Run the shell inside the selected container
-    docker exec -it "$selected_container_id" mysql -u root -p
-    exit 0
-  fi
 
   echo ""
   echo "======================================"
